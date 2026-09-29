@@ -24,6 +24,7 @@ Claude accounts do not sync local skills between machines; a plugin from a GitHu
 - `models <cli>` asks each CLI for its real model list; nothing is hard-coded.
 - `run` executes one job with explicit model + effort, read-only by default, optional git worktree for write jobs, background mode, timeouts, resume.
 - The skill's workflow makes the lead brief clearly, choose model/effort, and **verify diff/tests itself** before accepting.
+- **Model guide that fights staleness:** `references/model-guide.json` holds per-model guidance where every entry has a source URL, a verified date and a confidence level (official / third-party / unknown; nothing is written from memory). `check` diffs it against each CLI's live model list every time (new models, retired models, preview models, guide older than 30 days) and the skill makes the lead research and refresh it via a local overlay. `score` + `scoreboard` add measured pass rates from your own jobs, which outrank the general guide.
 
 ## Verified facts and limits
 

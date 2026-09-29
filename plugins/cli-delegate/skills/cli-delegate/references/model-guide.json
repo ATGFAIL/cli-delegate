@@ -1,0 +1,274 @@
+{
+  "_readme": "Sourced model guide. Every entry needs a source URL and a verified date. confidence: official (vendor docs / the CLI's own catalog), third-party (blog/benchmark site, treat as a hint), unknown (no source found; do NOT fill in from memory). `delegate check` compares this file with each CLI's live model list and flags new, removed and stale items. Local refreshes go to ~/.cli-delegate/model-guide.local.json and override entries with the same `key`.",
+  "verified": "2026-09-29",
+  "max_age_days": 30,
+  "sources": {
+    "claude": "https://platform.claude.com/docs/en/about-claude/models/overview",
+    "claude_deprecations": "https://platform.claude.com/docs/en/about-claude/model-deprecations",
+    "openai": "https://developers.openai.com/api/docs/models",
+    "gemini": "https://ai.google.dev/gemini-api/docs/models",
+    "codex_live": "codex debug models (the CLI's own catalog)"
+  },
+  "entries": [
+    {
+      "key": "claude-fable-5-1",
+      "cli": "claude",
+      "match": "^(claude-fable|fable)",
+      "status": "current",
+      "tier": "top",
+      "best_for": [
+        "hard reasoning",
+        "long-horizon agentic work",
+        "when opus at higher effort still falls short"
+      ],
+      "notes": "Slower; $10/$50 per MTok; default effort high; retirement not sooner than 2027-09-01.",
+      "source": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "claude-opus-5-5",
+      "cli": "claude",
+      "match": "^(claude-opus-5-5|opus)$",
+      "status": "current",
+      "tier": "large",
+      "best_for": [
+        "long-running agentic coding",
+        "knowledge work",
+        "Anthropic's stated default starting point for most workloads"
+      ],
+      "notes": "Moderate latency; $4/$20 per MTok; default effort medium; retirement not sooner than 2027-09-22.",
+      "source": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "claude-sonnet-5-5",
+      "cli": "claude",
+      "match": "^(claude-sonnet-5-5|sonnet)$",
+      "status": "current",
+      "tier": "mid",
+      "best_for": [
+        "best combination of speed and intelligence",
+        "everyday implementation"
+      ],
+      "notes": "Fast; $2/$10 per MTok; default effort high; retirement not sooner than 2027-09-28.",
+      "source": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "claude-haiku-4-5",
+      "cli": "claude",
+      "match": "^(claude-haiku|haiku)",
+      "status": "current",
+      "tier": "small",
+      "best_for": [
+        "fastest, near-frontier intelligence",
+        "cheap lookups, summaries, small edits"
+      ],
+      "notes": "Fastest; $1/$5 per MTok; API docs list effort as not supported (the CLI still accepted --effort in tests); retirement not sooner than 2026-10-15, so check before relying on it.",
+      "source": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "claude-4-6-via-agy",
+      "cli": "agy",
+      "match": "^claude-(sonnet|opus)-4-6",
+      "status": "legacy",
+      "tier": "mid-large",
+      "best_for": [
+        "a Claude-family second opinion using Agy's quota instead of Claude Code's"
+      ],
+      "notes": "Opus 4.6 and Sonnet 4.6 are listed by Anthropic as legacy (still available). No strengths beyond that were found.",
+      "source": "https://platform.claude.com/docs/en/about-claude/models/overview",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-6-luna",
+      "cli": "codex",
+      "match": "^gpt-6-luna",
+      "status": "current",
+      "tier": "small",
+      "best_for": [
+        "focused high-volume tasks",
+        "easier tasks where speed and cost matter"
+      ],
+      "notes": "OpenAI: most efficient model for focused, high-volume tasks. Codex catalog: fast and affordable for easier tasks. A third-party comparison (gradually.ai, benchlm.ai) reports GPT-5.6 Terra ahead of GPT-6 Luna on a public coding lane (64.2 vs 51.1), so do not use Luna for hard coding.",
+      "source": "https://developers.openai.com/api/docs/models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-5.6-terra",
+      "cli": "codex",
+      "match": "^gpt-5\\.6-terra",
+      "status": "older",
+      "tier": "mid",
+      "best_for": [
+        "straightforward everyday work",
+        "balanced cost and quality"
+      ],
+      "notes": "Codex catalog calls it an older balanced model for straightforward work. Third-party sources put it as GPT-5.5-class at half the price.",
+      "source": "codex debug models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-5.6-luna",
+      "cli": "codex",
+      "match": "^gpt-5\\.6-luna",
+      "status": "older",
+      "tier": "small",
+      "best_for": [
+        "fast and efficient light tasks"
+      ],
+      "notes": "Codex catalog: older fast and efficient model.",
+      "source": "codex debug models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-5.5",
+      "cli": "codex",
+      "match": "^gpt-5\\.5$",
+      "status": "legacy",
+      "tier": "mid",
+      "best_for": [
+        "coding (labelled a legacy coding model)"
+      ],
+      "notes": "Codex catalog: legacy coding model. Supports efforts up to xhigh only.",
+      "source": "codex debug models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gemini-3.8-flash",
+      "cli": "agy",
+      "match": "^gemini-3\\.8-flash",
+      "status": "current",
+      "tier": "mid",
+      "best_for": [
+        "long-horizon software engineering",
+        "autonomous agents",
+        "long-context coding"
+      ],
+      "notes": "Google: most intelligent Flash model, stable. Google's model card reports DeepSWE v1.1 73.7% vs 65.3% for 3.7 Flash (vendor figures). -low/-medium/-high in the id is the effort tier.",
+      "source": "https://ai.google.dev/gemini-api/docs/models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gemini-3.7-flash",
+      "cli": "agy",
+      "match": "^gemini-3\\.7-flash",
+      "status": "previous-gen",
+      "tier": "mid",
+      "best_for": [
+        "complex coding",
+        "reliable multi-step execution"
+      ],
+      "notes": "Google: previous-generation Flash, stable. Prefer 3.8 unless you need a different cost or behavior.",
+      "source": "https://ai.google.dev/gemini-api/docs/models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gemini-3.6-flash",
+      "cli": "agy",
+      "match": "^gemini-3\\.6-flash",
+      "status": "previous-gen",
+      "tier": "small-mid",
+      "best_for": [
+        "speed",
+        "multimodal",
+        "general everyday tasks"
+      ],
+      "notes": "Google: previous-generation Flash balancing speed and multimodal capability, stable.",
+      "source": "https://ai.google.dev/gemini-api/docs/models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gemini-3.1-pro",
+      "cli": "agy",
+      "match": "^gemini-3\\.1-pro",
+      "status": "preview",
+      "tier": "large",
+      "best_for": [
+        "advanced problem solving",
+        "agentic and 'vibe' coding"
+      ],
+      "notes": "Google lists it as Preview: behavior and availability can change or be shut down (Gemini 3 Pro Preview already was), so re-run `delegate check` before depending on it.",
+      "source": "https://ai.google.dev/gemini-api/docs/models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-oss-120b",
+      "cli": "agy",
+      "match": "^gpt-oss-120b",
+      "status": "open-weight",
+      "tier": "mid",
+      "best_for": [
+        "high-reasoning general tasks",
+        "function calling and agentic/browsing tasks"
+      ],
+      "notes": "Model card: 117B total / 5.1B active params, Apache 2.0, reasoning levels low/medium/high. Coding strength is NOT stated in the model card, so do not assume it is good at code: check `delegate scoreboard` for your own results first.",
+      "source": "https://huggingface.co/openai/gpt-oss-120b",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-6-astra",
+      "cli": "codex",
+      "match": "^gpt-6-astra",
+      "status": "current",
+      "tier": "top",
+      "best_for": [
+        "hardest end-to-end work",
+        "complex reasoning",
+        "coding",
+        "computer use",
+        "research",
+        "document creation"
+      ],
+      "notes": "OpenAI: built for the hardest end-to-end work. $10 in / $50 out per MTok, 1.05M context. Codex catalog: frontier intelligence for the most demanding work; its default effort is low, so always pass --effort. Most expensive Codex option: reserve for jobs a cheaper model failed.",
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-astra",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-6-sol",
+      "cli": "codex",
+      "match": "^gpt-6-sol",
+      "status": "current",
+      "tier": "large",
+      "best_for": [
+        "complex coding",
+        "agentic workflows",
+        "everyday coding work"
+      ],
+      "notes": "OpenAI: built for complex coding and agentic workflows. $2 in / $10 out per MTok, 1.05M context. Codex catalog: workhorse model for coding and everyday work. Sensible default worker for real implementation jobs.",
+      "source": "https://developers.openai.com/api/docs/models/gpt-6-sol",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    },
+    {
+      "key": "gpt-5.6-sol",
+      "cli": "codex",
+      "match": "^gpt-5.6-sol",
+      "status": "older",
+      "tier": "large",
+      "best_for": [
+        "complex coding (older generation)"
+      ],
+      "notes": "Codex catalog: older coding model for complex work. Prefer gpt-6-sol unless you need to compare.",
+      "source": "codex debug models",
+      "verified": "2026-09-29",
+      "confidence": "official"
+    }
+  ]
+}

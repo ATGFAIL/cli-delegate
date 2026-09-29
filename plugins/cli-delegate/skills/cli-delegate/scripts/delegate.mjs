@@ -143,7 +143,7 @@ function listModels(name) {
     try {
       const j = JSON.parse(r.stdout); const arr = j.models || j;
       return { cli: name, models: arr.filter((m) => m.visibility === 'list').map((m) => ({
-        id: m.slug, efforts: (m.supported_reasoning_levels || []).map((x) => x.effort || x), default_effort: m.default_reasoning_level })) };
+        id: m.slug, description: m.description, efforts: (m.supported_reasoning_levels || []).map((x) => x.effort || x), default_effort: m.default_reasoning_level })) };
     } catch { return { cli: name, error: 'could not parse `codex debug models`', raw: r.stdout.slice(0, 500) }; }
   }
   return { cli: name, note: 'claude has no model-list command; pass an alias (opus/sonnet/haiku/...) or a full model id, see `claude --help`' };
@@ -154,6 +154,89 @@ function codexEfforts(model) {
 }
 const CLAUDE_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 const AGY_EFFORTS = ['low', 'medium', 'high', 'max'];
+
+// ---------- sourced model guide (bundled) + local refresh overlay ----------
+const GUIDE_FILE = new URL('../references/model-guide.json', import.meta.url);
+const LOCAL_GUIDE = path.join(STATE_DIR, 'model-guide.local.json');
+const SCORE_FILE = path.join(STATE_DIR, 'scorecard.jsonl');
+
+function loadGuide() {
+  const g = JSON.parse(fs.readFileSync(GUIDE_FILE, 'utf8'));
+  let local = null;
+  try { local = JSON.parse(fs.readFileSync(LOCAL_GUIDE, 'utf8')); } catch { /* no local overlay */ }
+  if (local) { // local entries override bundled ones with the same key; newest verified date wins for the file age
+    const byKey = new Map(g.entries.map((e) => [e.key, e]));
+    for (const e of local.entries || []) byKey.set(e.key, e);
+    g.entries = [...byKey.values()];
+    if (local.verified && local.verified > g.verified) g.verified = local.verified;
+  }
+  return g;
+}
+const entryFor = (g, cli, id) => g.entries.find((e) => e.cli === cli && new RegExp(e.match, 'i').test(id));
+const ageDays = (d) => Math.floor((Date.now() - Date.parse(d)) / 86400000);
+
+// Compare the guide with what each installed CLI reports right now.
+function checkGuide() {
+  const g = loadGuide(), report = { guideVerified: g.verified, guideAgeDays: ageDays(g.verified), clis: {}, actionRequired: [] };
+  if (report.guideAgeDays > g.max_age_days) report.actionRequired.push(`guide is ${report.guideAgeDays} days old (limit ${g.max_age_days}): re-verify against the sources`);
+  for (const cli of Object.keys(CLIS)) {
+    const d = detect(cli);
+    if (!d.found) { report.clis[cli] = { installed: false }; continue; }
+    const live = listModels(cli);
+    const ids = (live.models || []).map((m) => m.id);
+    const info = { installed: true, version: d.version, liveModels: ids.length, undocumented: [], staleEntries: [], documented: [] };
+    if (cli === 'claude') { // no list command: aliases cannot be diffed, so only check age and retirement-sensitive entries
+      info.note = 'claude has no model-list command; entries cannot be diffed automatically';
+    } else {
+      for (const m of live.models || []) {
+        const e = entryFor(g, cli, m.id);
+        if (!e) info.undocumented.push(m.id); else if (!info.documented.includes(e.key)) info.documented.push(e.key);
+      }
+      for (const e of g.entries.filter((x) => x.cli === cli && x.status !== 'not-in-catalog')) {
+        if (!ids.some((id) => new RegExp(e.match, 'i').test(id))) info.staleEntries.push(e.key);
+      }
+      if (info.undocumented.length) report.actionRequired.push(`${cli}: live models not in the guide (research before use): ${info.undocumented.join(', ')}`);
+      if (info.staleEntries.length) report.actionRequired.push(`${cli}: guide entries no longer offered (likely retired/renamed): ${info.staleEntries.join(', ')}`);
+    }
+    for (const e of g.entries.filter((x) => x.cli === cli && ['preview', 'unknown'].includes(x.status))) {
+      report.actionRequired.push(`${cli}: '${e.key}' is ${e.status} in the guide: treat as unreliable and re-check`);
+    }
+    report.clis[cli] = info;
+  }
+  report.ok = report.actionRequired.length === 0;
+  if (!report.ok) report.howToRefresh = `Look up each item in the guide's official \`sources\`, then write ~/.cli-delegate/model-guide.local.json (same entry format, real source URL + today's date, confidence 'unknown' when nothing is found). Never fill facts from memory.`;
+  return report;
+}
+
+// Live catalog joined with sourced guidance (+ vendor description when the CLI gives one).
+function guideFor(cli) {
+  const g = loadGuide(), live = listModels(cli);
+  if (!live.models) return { cli, note: live.note || live.error, entries: g.entries.filter((e) => e.cli === cli) };
+  return { cli, guideVerified: g.verified, models: live.models.map((m) => {
+    const e = entryFor(g, cli, m.id);
+    return { id: m.id, cliDescription: m.description, guide: e ? { status: e.status, tier: e.tier, best_for: e.best_for, notes: e.notes, confidence: e.confidence, source: e.source, verified: e.verified } : 'NOT IN GUIDE: research before use' };
+  }) };
+}
+
+// ---------- scorecard: measured results from this user's own delegated jobs ----------
+function appendScore(rec) { fs.mkdirSync(STATE_DIR, { recursive: true }); fs.appendFileSync(SCORE_FILE, JSON.stringify(rec) + '\n'); }
+function readScores() {
+  try { return fs.readFileSync(SCORE_FILE, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; }
+}
+function scoreboard() {
+  const runs = new Map(), verdicts = new Map();
+  for (const r of readScores()) (r.type === 'verdict' ? verdicts : runs).set(r.id, { ...(runs.get(r.id) || {}), ...r });
+  const groups = {};
+  for (const r of runs.values()) {
+    const key = `${r.cli}/${r.model || 'default'}/${r.effort} | ${r.taskType || 'untagged'}`;
+    const v = verdicts.get(r.id)?.verdict;
+    const gr = (groups[key] ||= { runs: 0, pass: 0, partial: 0, fail: 0, unverified: 0, secs: [] });
+    gr.runs++; gr[v || 'unverified']++; if (r.durationSec != null) gr.secs.push(r.durationSec);
+  }
+  return Object.entries(groups).map(([k, v]) => { const s = v.secs.sort((a, b) => a - b);
+    return { group: k, runs: v.runs, pass: v.pass, partial: v.partial, fail: v.fail, unverified: v.unverified, medianSec: s.length ? s[Math.floor(s.length / 2)] : null }; })
+    .sort((a, b) => b.runs - a.runs);
+}
 
 // ---------- adapters: (opts) -> {args, stdin, outputFile?, parse} ----------
 function isGitRepo(dir) { return spawnSync('git', ['-C', dir, 'rev-parse', '--git-dir'], { windowsHide: true }).status === 0; }
@@ -240,6 +323,7 @@ function prepareRun(flags) {
   const wt = flags.worktree ? makeWorktree(cwd, id) : null;
   const meta = { id, cli, model: flags.model && flags.model !== true ? flags.model : null, effort, mode, cwd, workdir: wt ? wt.path : cwd,
     worktree: wt, resume: flags.resume && flags.resume !== true ? flags.resume : null,
+    taskType: flags['task-type'] && flags['task-type'] !== true ? String(flags['task-type']) : null,
     timeoutSec: Number(flags.timeout) || 900, status: 'pending', startedAt: null, cliPath: d.path, promptFile };
   writeMeta(meta);
   return meta;
@@ -271,7 +355,10 @@ function execute(meta) {
       if (err) meta.error = String(err.message || err);
       if (before !== null && gitState(meta.workdir) !== before) meta.unexpectedChanges = true; // read-only run modified the tree
       fs.writeFileSync(path.join(runDir(meta.id), 'result.txt'), parsed.text || '');
-      writeMeta(meta); resolve(meta);
+      writeMeta(meta);
+      appendScore({ type: 'run', id: meta.id, ts: meta.endedAt, cli: meta.cli, model: meta.model, effort: meta.effort, mode: meta.mode,
+        taskType: meta.taskType, status: meta.status, durationSec: Math.round((Date.parse(meta.endedAt) - Date.parse(meta.startedAt)) / 1000) });
+      resolve(meta);
     };
     child.on('error', (e) => finish(null, e));
     child.on('close', (code) => finish(code));
@@ -298,6 +385,16 @@ const cmd = pos[0];
 async function main() {
   if (cmd === 'detect') return out({ platform: process.platform, node: process.version, clis: Object.keys(CLIS).map(detect) });
   if (cmd === 'models') { const n = pos[1]; if (!CLIS[n]) fail('usage: models <claude|codex|agy>'); return out(listModels(n)); }
+  if (cmd === 'check') return out(checkGuide());
+  if (cmd === 'guide') { const n = pos[1]; if (!CLIS[n]) fail('usage: guide <claude|codex|agy>'); return out(guideFor(n)); }
+  if (cmd === 'scoreboard') return out({ file: SCORE_FILE, note: 'measured from your own delegated jobs; verdicts come from the lead via `score`', rows: scoreboard() });
+  if (cmd === 'score') { // the lead records its verification verdict for a finished run
+    const id = pos[1], verdict = flags.verdict;
+    if (!readMeta(id)) fail(`no such run: ${id}`);
+    if (!['pass', 'partial', 'fail'].includes(verdict)) fail('--verdict must be pass, partial or fail');
+    appendScore({ type: 'verdict', id, ts: new Date().toISOString(), verdict, note: flags.note && flags.note !== true ? String(flags.note) : undefined });
+    return out({ ok: true, id, verdict });
+  }
   if (cmd === 'run') {
     const meta = prepareRun(flags);
     if (flags.bg) {
@@ -319,6 +416,6 @@ async function main() {
     if (m.status === 'running' && m.pid && !pidAlive(m.pid)) { m.status = 'failed'; m.error = 'worker died'; writeMeta(m); }
     return out(summary(m, cmd !== 'status'));
   }
-  fail('usage: detect | models <cli> | run --cli X --model M --effort E [--mode read|write] [--cwd D] --prompt-file F [--timeout S] [--bg] [--worktree] [--resume ID] | status|result|wait <id>');
+  fail('usage: detect | models <cli> | check | guide <cli> | run --cli X --model M --effort E [--task-type T] [--mode read|write] [--cwd D] --prompt-file F [--timeout S] [--bg] [--worktree] [--resume ID] | status|result|wait <id> | score <id> --verdict pass|partial|fail | scoreboard');
 }
 main().catch((e) => fail(String(e && e.stack || e)));
