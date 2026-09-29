@@ -1,0 +1,14 @@
+{
+  "name": "atgfail-tools",
+  "owner": {
+    "name": "ATGFAIL"
+  },
+  "description": "Tools by ATGFAIL: cli-delegate lets Claude Code delegate work to Codex, Agy and other CLIs and verify the results.",
+  "plugins": [
+    {
+      "name": "cli-delegate",
+      "source": "./plugins/cli-delegate",
+      "description": "Lead-and-verify delegation: run Codex, Agy or another Claude session as sub-agents with per-task model and effort, then review their work."
+    }
+  ]
+}

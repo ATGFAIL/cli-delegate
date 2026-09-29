@@ -1,0 +1,9 @@
+{
+  "name": "cli-delegate",
+  "version": "0.1.0",
+  "description": "Use Codex, Agy (Antigravity CLI) or another Claude Code session as sub-agents. Claude leads, delegates by model strength, and verifies every result.",
+  "author": { "name": "ATGFAIL" },
+  "repository": "https://github.com/ATGFAIL/cli-delegate",
+  "license": "MIT",
+  "keywords": ["subagent", "codex", "antigravity", "delegation", "multi-model"]
+}
