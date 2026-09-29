@@ -16,4 +16,4 @@ Verified 2026-09-29 on Windows 11, `codex-cli 0.158.0-alpha.2.1` (`--help`, `deb
 
 Install: macOS/Linux `curl -fsSL https://chatgpt.com/codex/install.sh | sh` or `npm install -g @openai/codex` (official docs). On Windows the desktop Store app bundles `codex.exe` at `%ProgramFiles%\WindowsApps\OpenAI.Codex_<version>\app\resources\codex.exe`; that path changes with each update, so the runner discovers it (PATH, then WindowsApps, then `Get-AppxPackage`). Override with `CLI_DELEGATE_CODEX`.
 
-Auth: `codex login status`.
+Verified on Ubuntu 22.04: `codex` and `claude` live in `~/.local/bin` (not on a non-login SSH PATH); the runner probes that directory. Auth: `codex login status`.

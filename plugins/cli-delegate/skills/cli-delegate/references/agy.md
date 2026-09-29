@@ -20,6 +20,6 @@ Write mode: `--mode accept-edits`.
 ## Install / location
 
 - Windows: `irm https://antigravity.google/cli/install.ps1 | iex`. Verified location on this machine: `%USERPROFILE%\.gemini\bin\agy.exe` (not on PATH).
-- macOS/Linux: `curl -fsSL https://antigravity.google/cli/install.sh | bash`, binary at `~/.local/bin/agy` (from third-party guides, **not verified on Linux/macOS**; the runner checks `--help` output contains `--print`).
+- macOS/Linux: `curl -fsSL https://antigravity.google/cli/install.sh | bash` (official install command per third-party guides). **Verified on Ubuntu 22.04:** the binary is `~/.gemini/bin/agy` (here symlinked from `/usr/local/bin/agy`), same as Windows. macOS not verified. The runner checks `--help` output contains `--print`.
 - On Linux the desktop app's `/usr/bin/antigravity` can collide with the name `agy` (third-party report); the runner rejects executables that do not look like agy.
 - Override with `CLI_DELEGATE_AGY`.

@@ -27,10 +27,10 @@ Claude accounts do not sync local skills between machines; a plugin from a GitHu
 
 ## Verified facts and limits
 
-Everything was checked against real `--help` output and real runs on **Windows 11** (claude 2.1.258, codex 0.158.0-alpha.2.1, agy 1.2.13). Details in [`references/`](plugins/cli-delegate/skills/cli-delegate/references).
+Everything was checked against real `--help` output and real runs on **Windows 11** (claude 2.1.258, codex 0.158.0-alpha.2.1, agy 1.2.13) and **Ubuntu 22.04 x86_64** (claude 2.1.272, codex 0.157.1, agy 1.2.12, Node 24): detect, models, read-only run, background run, resume, timeout kill, and write jobs in a git worktree. Details in [`references/`](plugins/cli-delegate/skills/cli-delegate/references).
 
 - **Agy does not enforce read-only** (`--mode plan` / `--sandbox` still allowed a file write). The runner adds an instruction and warns if `git status` changed. Use `--worktree` for jobs that matter.
-- **Linux / macOS are not tested yet.** Code paths exist (PATH lookup, `~/.local/bin`, process-group kill) but the Agy/Codex install locations there come from documentation and third-party guides. Override with `CLI_DELEGATE_CODEX`, `CLI_DELEGATE_AGY`, `CLI_DELEGATE_CLAUDE` if detection misses. Reports and PRs welcome.
+- **macOS is not tested yet** (same POSIX code path as Linux, but unverified). Override with `CLI_DELEGATE_CODEX`, `CLI_DELEGATE_AGY`, `CLI_DELEGATE_CLAUDE` if detection misses. Reports and PRs welcome.
 - Model strength guidance in `SKILL.md` is a starting heuristic, not a benchmark.
 
 ## License
