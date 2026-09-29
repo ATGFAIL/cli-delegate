@@ -196,10 +196,11 @@ function checkGuide() {
         if (!ids.some((id) => new RegExp(e.match, 'i').test(id))) info.staleEntries.push(e.key);
       }
       if (info.undocumented.length) report.actionRequired.push(`${cli}: live models not in the guide (research before use): ${info.undocumented.join(', ')}`);
-      if (info.staleEntries.length) report.actionRequired.push(`${cli}: guide entries no longer offered (likely retired/renamed): ${info.staleEntries.join(', ')}`);
+      // A catalog can shrink or grow with plan, account and time (observed: Codex briefly listed extra models), so this alone is a warning, not proof of retirement.
+      if (info.staleEntries.length) (report.warnings ||= []).push(`${cli}: guide entries not offered by this machine's ${cli} right now (retired, renamed, or not on this account/plan): ${info.staleEntries.join(', ')}. Do not use them here; confirm retirement in the vendor's deprecation page before deleting the entry`);
     }
     for (const e of g.entries.filter((x) => x.cli === cli && ['preview', 'unknown'].includes(x.status))) {
-      report.actionRequired.push(`${cli}: '${e.key}' is ${e.status} in the guide: treat as unreliable and re-check`);
+      (report.warnings ||= []).push(`${cli}: '${e.key}' is ${e.status} in the guide: may change or be shut down, do not depend on it long-term`);
     }
     report.clis[cli] = info;
   }
